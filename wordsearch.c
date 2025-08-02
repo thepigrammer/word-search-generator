@@ -4,7 +4,7 @@
 
 int main(void) {
 
-    // Get the length and width from user.
+    // Get the grid length and height from user.
     int length;
     int height;
     printf("Enter the length: ");
