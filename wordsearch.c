@@ -13,7 +13,7 @@ int main(void) {
     printf("Enter the height: ");
     scanf("%i", &height);
 
-    // Get a word from user to include in grid.
+    // Get a word from user to include in grid (horizontally).
     char word[length + 1];
     printf("Enter a word with at most %i characters: ", length);
     scanf("%s", word);
