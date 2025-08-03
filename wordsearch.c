@@ -43,11 +43,11 @@ int main(void) {
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < length; j++) {
             if (i == wordRow && wordIndex < wordLength && j == wordColumn + wordIndex) {
-                printf("%c", toupper(word[wordIndex]));
+                printf("%c ", toupper(word[wordIndex]));
                 wordIndex++;
             }
             else {
-            printf("%c", 'A' + (rand() % 26));
+            printf("%c ", 'A' + (rand() % 26));
             }
         }
         printf("\n");
