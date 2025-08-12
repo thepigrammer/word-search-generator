@@ -9,9 +9,9 @@ int main(void) {
     unsigned int length;
     unsigned int height;
     printf("Enter the length: ");
-    scanf("%i", &length);
+    scanf("%u", &length);
     printf("Enter the height: ");
-    scanf("%i", &height);
+    scanf("%u", &height);
     getchar();
 
     // Get a word from the user.
@@ -24,7 +24,7 @@ int main(void) {
 
     unsigned int wordLength = 0;
     unsigned int i = 0;
-    printf("Enter a word with at most %i characters: ", length);
+    printf("Enter a word with at most %u characters: ", length);
     char letter = getchar();
     
     while (letter != '\n') {
