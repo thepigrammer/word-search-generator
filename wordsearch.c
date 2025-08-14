@@ -39,37 +39,60 @@ int main(void) {
     unsigned int wordSize = 4;
     char* word = malloc(sizeof(char) * 4);
     if (word == NULL) {
-        printf("Error: malloc() returned NULL.");
+        printf("Error: malloc() returned NULL.\n");
         return 1;
     }
 
-    // wordLength will be incremented for every char received from the user.
-    unsigned int wordLength = 0;
+    // Set first char of word to know if user immediately pressed Enter without typing a word.
+    word[0] = '\0';
 
-    // Prompt user and receive first char of word.
-    printf("Enter a word with at most %u characters: ", length);
-    char letter = getchar();
-    
-    // Put received char into word and take another. Repeat until user presses Enter.
-    for (unsigned int i = 0; letter != '\n'; i++) {
+    printf("Type all words, pressing Enter after each one. Input a '.' to mark the end of the words list.\n");
 
-        // Double the size of the word array if the amomunt of characters goes over the current size.
-        if (i > wordSize) {
-            word = realloc(word, sizeof(char) * (wordSize * 2));
-            if (word == NULL) {
-                printf("Error: realloc() returned NULL.");
-                return 2;
+    // Keep getting words from user; loop will break once user enters "." as first char of word.
+    while (true) {
+
+        // wordLength will be incremented for every char received from the user.
+        unsigned int wordLength = 0;
+
+        // Receive first char of word.
+        char letter = getchar();
+        
+        // Put received char into word and take another. Repeat until user presses Enter.
+        for (unsigned int i = 0; letter != '\n'; i++) {
+
+            // Double the size of the word array if the amomunt of characters goes over the current size.
+            if (i > wordSize) {
+                word = realloc(word, sizeof(char) * (wordSize * 2));
+                if (word == NULL) {
+                    printf("Error: realloc() returned NULL.\n");
+                    return 2;
+                }
+                wordSize *= 2;
             }
-            wordSize *= 2;
+
+            word[i] = letter;
+            wordLength++;
+            letter = getchar();
         }
 
-        word[i] = letter;
-        wordLength++;
-        letter = getchar();
-    }
+        // If user pressed Enter without typing anything, restart the loop.
+        if (word[0] == '\0') {
+            continue;
+        }
 
-    // Call right() to store the word in the hash table as individual letters with their grid coordinates.
-    right(letters, word, wordLength, length, height);
+        // If user entered "." as the word, break out of the loop to stop receiving words.
+        if (word[0] == '.') {
+            break;
+        }
+
+        // Call right() to store the word in the hash table as individual letters with their grid coordinates.
+        // If right() returns false, indicate that the word could not be placed.
+        if (!right(letters, word, wordLength, length, height)) {
+            printf("Word could not be placed on the grid.\n");
+        }
+
+        word[0] = '\0';
+    }
     
     // Space allocated for word is no longer needed.
     free(word);
@@ -78,6 +101,7 @@ int main(void) {
     ListNode* node;
     ListNode* freeing;
 
+    // Print the word search grid.
     // Go through every row, based on height.
     for (unsigned int row = 0; row < height; row++) {
 
@@ -104,7 +128,7 @@ int main(void) {
                 if (node->column == column && node->row == row) {
 
                     // Print the letter held in the node.
-                    printf("%c ", toupper(node->letter));
+                    printf("%c ", node->letter);
 
                     // Free the node and set hashIndex to NULL to signal no list left.
                     free(letters[hashIndex]);
@@ -126,7 +150,7 @@ int main(void) {
                 if (node->column == column && node->row == row) {
 
                     // Print the letter in the node.
-                    printf("%c ", toupper(node->letter));
+                    printf("%c ", node->letter);
 
                     // Set the start of hashIndex's list to the node after the old starting node.
                     letters[hashIndex] = node->next;
@@ -154,7 +178,7 @@ int main(void) {
                     else {
 
                         // Print the letter in the next node.
-                        printf("%c ", toupper(node->next->letter));
+                        printf("%c ", node->next->letter);
 
                         // Store the next node for freeing.
                         freeing = node->next;
@@ -221,14 +245,14 @@ bool right(ListNode** letters, char* word, unsigned int wordLength, unsigned int
 
         // Go through the linked list, searching for a node that already holds the coordinates.
         while (node != NULL) {
-
+            
             // If current node does not hold the coordinates, move to the next node.
-            if (!(node->column == column && node->row == row)) {
+            if (!(node->column == column + i && node->row == row)) {
                 node = node->next;
             }
             
             // Else if the node does hold the coordinates but the letter is the same, that works; move to next letter.
-            else if (node->letter == word[i]) {
+            else if (node->letter == toupper(word[i])) {
                 break;
             }
 
@@ -260,14 +284,14 @@ bool right(ListNode** letters, char* word, unsigned int wordLength, unsigned int
         // Make the new node, and set the array's element to point to it.
         letters[hashIndex] = malloc(sizeof(ListNode));
         if (letters[hashIndex] == NULL) {
-            printf("Error: malloc() returned NULL.");
+            printf("Error: malloc() returned NULL.\n");
             return false;
         }
 
         // Set the values of the node with the coordinates and letter.
         letters[hashIndex]->column = column + i;
         letters[hashIndex]->row = row;
-        letters[hashIndex]->letter = word[i];
+        letters[hashIndex]->letter = toupper(word[i]);
 
         // If there was no existing linked list at the index, set next to NULL.
         if (node == NULL) {
