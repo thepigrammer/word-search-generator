@@ -217,15 +217,17 @@ bool right(ListNode** letters, char* word, unsigned int wordLength, unsigned int
         return false;
     }
     
-    // Declare row and column variables, setting the row to a random row on the grid.
-    unsigned int row = rand() % height;
+    // Define row as the middle row of the grid.
+    unsigned int row = (height - 1) / 2;
+
+
     unsigned int column;
 
     // If the word is shorter than the length of each row...
     if (wordLength < length) {
 
-        // Choose a random column to start the word at, such that the rest will definitely fit placed to the right.
-        column = rand() % (length - wordLength + 1);
+        // Set column to rightmost one such that the rest of the word will definitely fit placed to the right.
+        column = length - wordLength;
     }
 
     // Else, the word is the length of the grid, and must start at the first column to take up the entire row.
@@ -237,35 +239,106 @@ bool right(ListNode** letters, char* word, unsigned int wordLength, unsigned int
     ListNode* node;
     bool spotTaken = false;
 
-    // Go through every letter in the word to detect if its potential grid spot is already taken.
-    for (unsigned int i = 0; i < wordLength && spotTaken == false; i++) {
+    // Declare variables for holding displacement from middle row and the current row being checked.
+    int displace = 0;
+    unsigned int dispRow;
 
-        // Start at the first node of the hash table chain that the potential coordinates could already be in.
-        node = letters[hash(column + i, row)];
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
 
-        // Go through the linked list, searching for a node that already holds the coordinates.
-        while (node != NULL) {
-            
-            // If current node does not hold the coordinates, move to the next node.
-            if (!(node->column == column + i && node->row == row)) {
-                node = node->next;
-            }
-            
-            // Else if the node does hold the coordinates but the letter is the same, that works; move to next letter.
-            else if (node->letter == toupper(word[i])) {
-                break;
-            }
+    // Check every row, starting from middle row then alternating outward checks.
+    while (row + displace < height) {
 
-            // Else, the potential spot is already taken by another letter.
-            else {
-                spotTaken = true;
-                break;
-            }
+        // If displace is negative, take it away from middle row to get current checking row.
+        if (displace < 0) {
+            dispRow = row - (unsigned int)(displace * -1);
         }
+
+        // Else, displace is positive and is added to middle row.
+        else {
+            dispRow = row + (unsigned int)displace;
+        }
+        
+        // Check every column starting from current column to column 0.
+        while (true) {
+
+            // Go through every letter in the word to detect if its potential grid spot is already taken.
+            for (unsigned int i = 0; i < wordLength && spotTaken == false; i++) {
+
+                // Start at the first node of the hash table chain that the potential coordinates could already be in.
+                node = letters[hash(column + i, dispRow)];
+
+                // Go through the linked list, searching for a node that already holds the coordinates.
+                while (node != NULL) {
+
+                    // If current node does not hold the coordinates, move to the next node.
+                    if (!(node->column == column + i && node->row == dispRow)) {
+                        node = node->next;
+                    }
+                    
+                    // Else if the node does hold the coordinates but the letter is the same, that works; move to next letter.
+                    else if (node->letter == toupper(word[i])) {
+                        break;
+                    }
+
+                    // Else, the potential spot is already taken by another letter.
+                    else {
+                        spotTaken = true;
+                        break;
+                    }
+                }
+            }
+
+            // If no grid spots were taken, a spot for word was found and loop is over.
+            if (spotTaken == false) {
+                spotFound = true;
+                break;
+            }
+
+            // Reset spotTaken for next check.
+            spotTaken = false;
+
+            // If column 0 was checked and loop was not broken, there is no spot for word on the row.
+            if (column == 0) {
+                break;
+            }
+
+            // Move column to the left by one.
+            column--;
+        }
+
+        // If a spot for the word was found, set row to the row that the spot was found in and break from loop.
+        if (spotFound) {
+            row = dispRow;
+            break;
+        }
+
+        // If the row is the middle, increment displace.
+        if (displace == 0) {
+            displace++;
+        }
+        
+        // Else if the displacement is negative, flip to positive and increment.
+        else if (displace < 0) {
+            displace = (displace * -1) + 1;
+        }
+
+        // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+        else if ((unsigned int)(displace) <= row) {
+            displace *= -1;
+        }
+
+        // Else, the displacement would be out of bounds, all rows checked and loop complete.
+        else {
+            break;
+        }
+
+        // Reset column to the rightmost possible one for word since changing rows.
+        column = length - wordLength;
     }
 
-    // If a grid spot was already taken, word could not be placed.
-    if (spotTaken == true) {
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
         return false;
     }
 
