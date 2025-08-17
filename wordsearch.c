@@ -360,7 +360,7 @@ bool right(ListNode** letters, char* word, unsigned int wordLength, unsigned int
     return true;
 }
 
-// Checks whether a word will fit facing right for the given coordinates.
+// Checks whether a word will fit facing right from the given coordinates.
 bool checkRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int* row, unsigned int* column) {
 
     // Declare variable to signal whether the checked spot is taken and for node traversal.
@@ -616,7 +616,7 @@ bool rightMiddleMiddle(ListNode** letters, char* word, unsigned int wordLength, 
         }
         
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -819,7 +819,7 @@ bool rightTopMiddle(ListNode** letters, char* word, unsigned int wordLength, uns
     while (*row < height) {
        
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -1002,7 +1002,7 @@ bool rightBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, 
     while (true) {
        
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -1158,7 +1158,7 @@ bool left(ListNode** letters, char* word, unsigned int wordLength, unsigned int 
     return true;
 }
 
-// Checks whether a word will fit facing left for the given coordinates.
+// Checks whether a word will fit facing left from the given coordinates.
 bool checkLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int* row, unsigned int* column) {
 
     // Declare variable to signal whether the checked spot is taken and for node traversal.
@@ -1412,7 +1412,7 @@ bool leftMiddleMiddle(ListNode** letters, char* word, unsigned int wordLength, u
         }
         
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -1480,8 +1480,7 @@ bool leftMiddleMiddle(ListNode** letters, char* word, unsigned int wordLength, u
             break;
         }
 
-        // Reset column to middle and displace2 to 0 since changing rows.
-        *column = (length - 1) / 2;
+        // Reset displace2 to 0 since changing rows.
         displace2 = 0;
     }
 
@@ -1615,7 +1614,7 @@ bool leftTopMiddle(ListNode** letters, char* word, unsigned int wordLength, unsi
     while (*row < height) {
        
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -1662,8 +1661,7 @@ bool leftTopMiddle(ListNode** letters, char* word, unsigned int wordLength, unsi
             break;
         }
         
-        // Reset column to middle one and displace2 to 0 since changing rows, then move to next row down.
-        *column = (length - 1) / 2;
+        // Reset displace2 to 0 since changing rows, then move to next row down.
         displace2 = 0;
         (*row)++;
     }
@@ -1798,7 +1796,7 @@ bool leftBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, u
     while (true) {
        
         // Check every column starting from middle and alternating outward.
-        while (true) {
+        while (*column + abs(displace2) < length) {
 
             // If displace2 is negative, take it away from middle column to get current checking column.
             if (displace2 < 0) {
@@ -1845,8 +1843,7 @@ bool leftBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, u
             break;
         }
         
-        // Reset column to middle one and displace2 to 0 since changing rows, then move to next row up.
-        *column = (length - 1) / 2;
+        // Reset displace2 to 0 since changing rows, then move to next row up.
         displace2 = 0;
         (*row)--;
     }
