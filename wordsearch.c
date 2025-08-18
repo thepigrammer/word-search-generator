@@ -46,6 +46,18 @@ bool downTopMiddle(ListNode** letters, char* word, unsigned int wordLength, unsi
 bool downBottomRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
 bool downBottomLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
 bool downBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool up(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height);
+bool checkUp(ListNode** letters, char* word, unsigned int wordLength, unsigned int* row, unsigned int* column);
+bool upMiddleRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upMiddleLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upMiddleMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upTopRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upTopLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upTopMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upBottomRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upBottomLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+bool upBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+
 
 int main(void) {
     
@@ -118,19 +130,19 @@ int main(void) {
         }
 
         // Make an array with an element for each possible direction, with each element initialized to 0.
-        int functions[3] = {0};
+        int functions[4] = {0};
 
         // Store each direction's number in the array in random order.
         int index;
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 4; i++) {
             index = rand();
 
             // While the potential element has already been used to store a direction's number, search for another.
-            while (functions[index % 3] != 0) {
+            while (functions[index % 4] != 0) {
                 index++;
             }
 
-            functions[index % 3] = i;
+            functions[index % 4] = i;
         }
 
         // Create variables for storing direction function pointer and whether the call to it failed.
@@ -138,9 +150,9 @@ int main(void) {
         bool failed = true;
 
         // Go through functions array, calling the function at element until word is placed or all directions tried.
-        for (int i = 0; failed && i < 3; i++) {
+        for (int i = 0; failed && i < 4; i++) {
             switch (functions[i]) {
-                case 1: 
+                case 1:
                     function = right;
                     break;
                 case 2:
@@ -148,6 +160,9 @@ int main(void) {
                     break;
                 case 3:
                     function = down;
+                    break;
+                case 4:
+                    function = up;
                     break;
             }
 
@@ -2655,6 +2670,805 @@ bool downBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, u
         
         // If a spot for the word was found or the top row was checked, break from loop.
         if (spotFound || *row == 0) {
+            break;
+        }
+        
+        // Reset displace2 to 0 since changing rows, then move to next row up.
+        displace2 = 0;
+        (*row)--;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+
+// Function for putting a word on the grid going up.
+bool up(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height) {
+
+    // If the word is longer than the height of the grid, then it cannot be placed vertically.
+    if (wordLength > height) {
+        return false;
+    }
+
+    // Declare row and column variables.
+    unsigned int row, column;
+
+    // Randomly define variable to hold function pointer of one of 9 searching algorithms.
+    bool (*function)(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column);
+    int random = rand() % 9;
+    switch (random) {
+        case 0:
+            function = upMiddleRight;
+            break;
+        case 1:
+            function = upMiddleLeft;
+            break;
+        case 2:
+            function = upMiddleMiddle;
+            break;
+        case 3:
+            function = upTopRight;
+            break;
+        case 4:
+            function = upTopLeft;
+            break;
+        case 5:
+            function = upTopMiddle;
+            break;
+        case 6:
+            function = upBottomRight;
+            break;
+        case 7:
+            function = upBottomLeft;
+            break;
+        case 8:
+            function = upBottomMiddle;
+            break;
+    }
+
+    // Check for spot and set row and column; if returns false, no spot found for word.
+    if (!function(letters, word, wordLength, length, height, &row, &column)) {
+        return false;
+    }
+
+    // Word can be placed; make a variable to store the return value of the hash function to avoid unnecessary calls.
+    unsigned int hashIndex;
+
+    // Go through each letter of the word and store it in the hash table, along with its coordinates.
+    ListNode* node;
+    for (unsigned int i = 0; i < wordLength; i++) {
+
+        // If letter already has a node, it was changed to lowercase by check function; continue to next letter.
+        if (word[i] == tolower(word[i])) {
+            continue;
+        }
+
+        // Store the index of the hash table chain for the letter's coordinates.
+        hashIndex = hash(column, row - i);
+
+        // Store the first node of the chain.
+        node = letters[hashIndex];
+
+        // Make the new node, and set the array's element to point to it.
+        letters[hashIndex] = malloc(sizeof(ListNode));
+        if (letters[hashIndex] == NULL) {
+            printf("Error: malloc() returned NULL.\n");
+            return false;
+        }
+
+        // Set the values of the node with the coordinates and letter.
+        letters[hashIndex]->column = column;
+        letters[hashIndex]->row = row - i;
+        letters[hashIndex]->letter = word[i];
+
+        // If there was no existing linked list at the index, set next to NULL.
+        if (node == NULL) {
+            letters[hashIndex]->next = NULL;
+        }
+        
+        // Else, there was already a list at the index, so the new node points to the old starting node.
+        else {
+            letters[hashIndex]->next = node;
+        }
+    }
+
+    // Return true to signal that the word was successfully placed in the hash table.
+    return true;
+}
+
+// Checks whether a word will fit going up from the given coordinates.
+bool checkUp(ListNode** letters, char* word, unsigned int wordLength, unsigned int* row, unsigned int* column) {
+
+    // Declare variable to signal whether the checked spot is taken and for node traversal.
+    bool spotTaken = false;
+    ListNode* node;
+
+    // Go through every letter in the word to detect if its potential grid spot is already taken.
+    for (unsigned int i = 0; i < wordLength && spotTaken == false; i++) {
+
+        // Start at the first node of the hash table chain that the potential coordinates could already be in.
+        node = letters[hash(*column, *row - i)];
+
+        // Go through the linked list, searching for a node that already holds the coordinates.
+        while (node != NULL) {
+
+            // If current node does not hold the coordinates, move to the next node.
+            if (!(node->column == *column && node->row == *row - i)) {
+                node = node->next;
+            }
+            
+            // Else if the node does hold the coordinates but the letter is the same, that works; move to next letter.
+            else if (node->letter == word[i]) {
+
+                // Mark that the letter does not need to have a node created in hash table later if word fits.
+                word[i] = tolower(word[i]);
+
+                break;
+            }
+
+            // Else, the potential spot is already taken by another letter.
+            else {
+
+                // Reset the word's letters if any were changed to lowercase.
+                for (unsigned int j = 0; j < wordLength; j++) {
+                    if (word[j] != toupper(word[j])) {
+                        word[j] = toupper(word[j]);
+                    }
+                }
+
+                spotTaken = true;
+                break;
+            }
+        }
+    }
+
+    // Return whether or not the spot is available.
+    return !spotTaken;
+}
+
+// Checks for a spot where word can be placed going up, starting from middle row and rightmost column.
+bool upMiddleRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the middle row of the grid.
+    *row = (height - 1) / 2;
+
+    // Set column to rightmost one.
+    *column = length - 1;
+
+    // Declare variables for holding displacement from middle row and the current row being checked.
+    int displace = 0;
+    unsigned int dispRow;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from middle row then alternating outward checks.
+    while (*row + displace < height) {
+
+        // If displace is negative, take it away from middle row to get current checking row.
+        if (displace < 0) {
+            dispRow = *row - (unsigned int)(displace * -1);
+        }
+
+        // Else, displace is positive and is added to middle row.
+        else {
+            dispRow = *row + (unsigned int)displace;
+        }
+        
+        // Only check current row if the word is not too long to fit from row.
+        if (dispRow + 1 >= wordLength) {
+
+            // Check every column starting from rightmost column to leftmost column.
+            while (true) {
+
+                // If function returns true, the spot is available, and passed row and column values are for that spot.
+                if (checkUp(letters, word, wordLength, &dispRow, column)) {
+                    spotFound = true;
+                    break;
+                }
+
+                // If column 0 was checked, there is no spot for word on the row.
+                if (*column == 0) {
+                    break;
+                }
+
+                // Move column to the left by one.
+                (*column)--;
+            }
+        }
+
+        // If a spot for the word was found, set row to the row that the spot was found in and break from loop.
+        if (spotFound) {
+            *row = dispRow;
+            break;
+        }
+
+        // If the row is the middle, increment displace.
+        if (displace == 0) {
+            displace++;
+        }
+        
+        // Else if the displacement is negative, flip to positive and increment.
+        else if (displace < 0) {
+            displace = (displace * -1) + 1;
+        }
+
+        // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+        else if ((unsigned int)(displace) <= *row) {
+            displace *= -1;
+        }
+
+        // Else, the displacement would be out of bounds, all rows checked and loop complete.
+        else {
+            break;
+        }
+
+        // Reset column to the rightmost one since changing rows.
+        *column = length - 1;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from middle row and leftmost column.
+bool upMiddleLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+    
+    // Initialize row as the middle row of the grid.
+    *row = (height - 1) / 2;
+
+    // Initialize column as the leftmost one.
+    *column = 0;
+
+    // Declare variables for holding displacement from middle row and the current row being checked.
+    int displace = 0;
+    unsigned int dispRow;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from middle row then alternating outward checks.
+    while (*row + displace < height) {
+
+        // If displace is negative, take it away from middle row to get current checking row.
+        if (displace < 0) {
+            dispRow = *row - (unsigned int)(displace * -1);
+        }
+
+        // Else, displace is positive and is added to middle row.
+        else {
+            dispRow = *row + (unsigned int)displace;
+        }
+        
+        // Only check current row if the word is not too long to fit from row.
+        if (dispRow + 1 >= wordLength) {
+
+            // Check every column going to the right until last column.
+            while (true) {
+
+                // If function returns true, the spot is available, and passed row and column values are for that spot.
+                if (checkUp(letters, word, wordLength, &dispRow, column)) {
+                    spotFound = true;
+                    break;
+                }
+
+                // If rightmost column was checked and loop was not broken, there is no spot for word on the row.
+                if (*column == length - 1) {
+                    break;
+                }
+
+                // Move column to the right by one.
+                (*column)++;
+            }
+        }
+
+        // If a spot for the word was found, set row to the row that the spot was found in and break from loop.
+        if (spotFound) {
+            *row = dispRow;
+            break;
+        }
+
+        // If the row is the middle, increment displace.
+        if (displace == 0) {
+            displace++;
+        }
+        
+        // Else if the displacement is negative, flip to positive and increment.
+        else if (displace < 0) {
+            displace = (displace * -1) + 1;
+        }
+
+        // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+        else if ((unsigned int)(displace) <= *row) {
+            displace *= -1;
+        }
+
+        // Else, the displacement would be out of bounds, all rows checked and loop complete.
+        else {
+            break;
+        }
+
+        // Reset column to leftmost since changing rows.
+        *column = 0;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from middle row and middle column.
+bool upMiddleMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+    
+    // Initialize row as the middle row of the grid.
+    *row = (height - 1) / 2;
+
+    // Initialize column as the middle one.
+    *column = (length - 1) / 2;
+
+    // Declare variables for holding displacement from middle row and the current row being checked.
+    int displace = 0;
+    unsigned int dispRow;
+
+    // Declare displacement variables for column.
+    int displace2 = 0;
+    unsigned int dispCol;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from middle row then alternating outward checks.
+    while (*row + abs(displace) < height) {
+
+        // If displace is negative, take it away from middle row to get current checking row.
+        if (displace < 0) {
+            dispRow = *row - (unsigned int)(displace * -1);
+        }
+
+        // Else, displace is positive and is added to middle row.
+        else {
+            dispRow = *row + (unsigned int)displace;
+        }
+        
+        // Only check current row if the word is not too long to fit from row.
+        if (dispRow + 1 >= wordLength) {
+
+            // Check every column starting from middle and alternating outward.
+            while (*column + abs(displace2) < length) {
+
+                // If displace2 is negative, take it away from middle column to get current checking column.
+                if (displace2 < 0) {
+                    dispCol = *column - (unsigned int)(displace2 * -1);
+                }
+
+                // Else, displace2 is positive and is added to middle column.
+                else {
+                    dispCol = *column + (unsigned int)displace2;
+                }
+
+                // If function returns true, the spot is available, and passed row and column values are for that spot.
+                if (checkUp(letters, word, wordLength, &dispRow, &dispCol)) {
+                    spotFound = true;
+                    *column = dispCol;
+                    break;
+                }
+
+                // If the column is the middle, increment displace2.
+                if (displace2 == 0) {
+                    displace2++;
+                }
+                
+                // Else if the displacement is negative, flip to positive and increment.
+                else if (displace2 < 0) {
+                    displace2 = (displace2 * -1) + 1;
+                }
+
+                // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+                else if ((unsigned int)(displace2) <= *column) {
+                    displace2 *= -1;
+                }
+
+                // Else, the displacement would be out of bounds, all columns checked and loop complete.
+                else {
+                    break;
+                }
+            }
+        }
+
+        // If a spot for the word was found, set row to the row that the spot was found in and break from loop.
+        if (spotFound) {
+            *row = dispRow;
+            break;
+        }
+
+        // If the row is the middle, increment displace.
+        if (displace == 0) {
+            displace++;
+        }
+        
+        // Else if the displacement is negative, flip to positive and increment.
+        else if (displace < 0) {
+            displace = (displace * -1) + 1;
+        }
+
+        // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+        else if ((unsigned int)(displace) <= *row) {
+            displace *= -1;
+        }
+
+        // Else, the displacement would be out of bounds, all rows checked and loop complete.
+        else {
+            break;
+        }
+
+        // Reset displace2 to 0 since changing rows.
+        displace2 = 0;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from top row and rightmost column.
+bool upTopRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the highest row of the grid where word's length can fit.
+    *row = wordLength - 1;
+
+    // Set column to rightmost one.
+    *column = length - 1;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row starting at top until last row.
+    while (*row < height) {
+       
+        // Check every column starting from rightmost column to leftmost.
+        while (true) {
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, column)) {
+                spotFound = true;
+                break;
+            }
+
+            // If column 0 was checked, there is no spot for word on the row.
+            if (*column == 0) {
+                break;
+            }
+
+            // Move column to the left by one.
+            (*column)--;
+        }
+
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
+            break;
+        }
+        
+        // Reset column to the rightmost one since changing rows, then move to next row down.
+        *column = length - 1;
+        (*row)++;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from top row and leftmost column.
+bool upTopLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the highest row of the grid where word's length can fit.
+    *row = wordLength - 1;
+
+    // Initialize column as the leftmost one.
+    *column = 0;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row starting at top until last row.
+    while (*row < height) {
+       
+        // Check every column going to the right until last column.
+        while (true) {
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, column)) {
+                spotFound = true;
+                break;
+            }
+
+            // If rightmost column was checked and loop was not broken, there is no spot for word on the row.
+            if (*column == length - 1) {
+                break;
+            }
+
+            // Move column to the right by one.
+            (*column)++;
+        }
+
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
+            break;
+        }
+        
+        // Reset column to leftmost since changing rows, then move to next row down.
+        *column = 0;
+        (*row)++;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from top row and middle column.
+bool upTopMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the highest row of the grid where word's length can fit.
+    *row = wordLength - 1;
+
+    // Initialize column as the middle one.
+    *column = (length - 1) / 2;
+
+    // Declare displacement variables for column.
+    int displace2 = 0;
+    unsigned int dispCol;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row starting at top until last row.
+    while (*row < height) {
+       
+        // Check every column starting from middle and alternating outward.
+        while (*column + abs(displace2) < length) {
+
+            // If displace2 is negative, take it away from middle column to get current checking column.
+            if (displace2 < 0) {
+                dispCol = *column - (unsigned int)(displace2 * -1);
+            }
+
+            // Else, displace2 is positive and is added to middle column.
+            else {
+                dispCol = *column + (unsigned int)displace2;
+            }
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, &dispCol)) {
+                spotFound = true;
+                *column = dispCol;
+                break;
+            }
+
+            // If the column is the middle, increment displace2.
+            if (displace2 == 0) {
+                displace2++;
+            }
+            
+            // Else if the displacement is negative, flip to positive and increment.
+            else if (displace2 < 0) {
+                displace2 = (displace2 * -1) + 1;
+            }
+
+            // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+            else if ((unsigned int)(displace2) <= *column) {
+                displace2 *= -1;
+            }
+
+            // Else, the displacement would be out of bounds, all columns checked and loop complete.
+            else {
+                break;
+            }
+        }
+
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
+            break;
+        }
+        
+        // Reset displace2 to 0 since changing rows, then move to next row down.
+        displace2 = 0;
+        (*row)++;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from bottom row and rightmost column.
+bool upBottomRight(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the last row of the grid.
+    *row = height - 1;
+
+    // Set column to rightmost one.
+    *column = length - 1;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from bottom row until word's length cannot fit.
+    while (*row + 1 >= wordLength) {
+       
+        // Check every column starting from rightmost column to leftmost.
+        while (true) {
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, column)) {
+                spotFound = true;
+                break;
+            }
+
+            // If column 0 was checked, there is no spot for word on the row.
+            if (*column == 0) {
+                break;
+            }
+
+            // Move column to the left by one.
+            (*column)--;
+        }
+
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
+            break;
+        }
+        
+        // Reset column to the rightmost one since changing rows, then move to next row up.
+        *column = length - 1;
+        (*row)--;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from bottom row and leftmost column.
+bool upBottomLeft(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the last row of the grid.
+    *row = height - 1;
+
+    // Initialize column as the leftmost one.
+    *column = 0;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from bottom row until word's length cannot fit.
+    while (*row + 1 >= wordLength) {
+       
+        // Check every column going to the right until last column.
+        while (true) {
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, column)) {
+                spotFound = true;
+                break;
+            }
+
+            // If rightmost column was checked and loop was not broken, there is no spot for word on the row.
+            if (*column == length - 1) {
+                break;
+            }
+
+            // Move column to the right by one.
+            (*column)++;
+        }
+
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
+            break;
+        }
+        
+        // Reset column to leftmost since changing rows, then move to next row up.
+        *column = 0;
+        (*row)--;
+    }
+
+    // If no spot was found during the check, word cannot be placed anywhere, return false.
+    if (spotFound == false) {
+        return false;
+    }
+
+    return true;
+}
+
+// Checks for a spot where word can be placed going up, starting from bottom row and middle column.
+bool upBottomMiddle(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height, unsigned int* row, unsigned int* column) {
+
+    // Initialize row as the last row of the grid.
+    *row = height - 1;
+
+    // Initialize column as the middle one.
+    *column = (length - 1) / 2;
+
+    // Declare displacement variables for column.
+    int displace2 = 0;
+    unsigned int dispCol;
+
+    // Declare variable to signal whether a spot for the word has been found.
+    bool spotFound = false;
+
+    // Check every row, starting from bottom row until word's length cannot fit.
+    while (*row + 1 >= wordLength) {
+       
+        // Check every column starting from middle and alternating outward.
+        while (*column + abs(displace2) < length) {
+
+            // If displace2 is negative, take it away from middle column to get current checking column.
+            if (displace2 < 0) {
+                dispCol = *column - (unsigned int)(displace2 * -1);
+            }
+
+            // Else, displace2 is positive and is added to middle column.
+            else {
+                dispCol = *column + (unsigned int)displace2;
+            }
+
+            // If function returns true, the spot is available, and passed row and column values are for that spot.
+            if (checkUp(letters, word, wordLength, row, &dispCol)) {
+                spotFound = true;
+                *column = dispCol;
+                break;
+            }
+
+            // If the column is the middle, increment displace2.
+            if (displace2 == 0) {
+                displace2++;
+            }
+            
+            // Else if the displacement is negative, flip to positive and increment.
+            else if (displace2 < 0) {
+                displace2 = (displace2 * -1) + 1;
+            }
+
+            // Else if the displacement is positive and flipping to negative would be in bounds, flip to negative.
+            else if ((unsigned int)(displace2) <= *column) {
+                displace2 *= -1;
+            }
+
+            // Else, the displacement would be out of bounds, all columns checked and loop complete.
+            else {
+                break;
+            }
+        }
+        
+        // If a spot for the word was found, break from loop.
+        if (spotFound) {
             break;
         }
         
