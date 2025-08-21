@@ -110,9 +110,13 @@ int main(void) {
 
     // Find out whether or not the user wants the board to expand when a word cannot be placed.
     char answer;
+    printf("Do you want the board to expand to fit words when they cannot fit?\n");
     while (answer != 'Y' && answer != 'N') {
-        printf("Do you want the board to expand to fit words when they cannot fit?\nInput Y or N: ");
+        printf("Input Y or N: ");
         answer = toupper(getchar());
+
+        // Clear '\n' from Enter.
+        getchar();
     }
 
     // Declare variable to be used later that signals if a word was placed.
@@ -257,8 +261,9 @@ int main(void) {
             printf("Word could not be placed on the grid.\n");
         }
 
-        if (!failed || answer == 'N')
-        word[0] = '\0';
+        if (!failed || answer == 'N') {
+            word[0] = '\0';
+        }
     }
     
     // Space allocated for word is no longer needed.
