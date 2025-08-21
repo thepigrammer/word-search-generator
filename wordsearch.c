@@ -108,6 +108,16 @@ int main(void) {
     // Set the random seed based on time.
     srand(time(NULL));
 
+    // Find out whether or not the user wants the board to expand when a word cannot be placed.
+    char answer;
+    while (answer != 'Y' && answer != 'N') {
+        printf("Do you want the board to expand to fit words when they cannot fit?\nInput Y or N: ");
+        answer = toupper(getchar());
+    }
+
+    // Declare variable to be used later that signals if a word was placed.
+    bool failed = false;
+
     // Get the grid length and height from user.
     unsigned int length;
     unsigned int height;
@@ -137,40 +147,51 @@ int main(void) {
     printf("Type all words, pressing Enter after each one. Input a '.' to mark the end of the words list.\n");
 
     // Keep getting words from user; loop will break once user enters "." as first char of word.
+    unsigned int wordLength;
     while (true) {
 
-        // wordLength will be incremented for every char received from the user.
-        unsigned int wordLength = 0;
+        // Only get a new word if the last one did not fail or if user doesn't want to expand the board.
+        if (answer == 'N' || failed == false) {
 
-        // Receive first char of word.
-        char letter = getchar();
-        
-        // Put received char into word and take another. Repeat until user presses Enter.
-        for (unsigned int i = 0; letter != '\n'; i++) {
+            // wordLength will be incremented for every char received from the user.
+            wordLength = 0;
 
-            // Double the size of the word array if the amomunt of characters goes over the current size.
-            if (i > wordSize) {
-                word = realloc(word, sizeof(char) * (wordSize * 2));
-                if (word == NULL) {
-                    printf("Error: realloc() returned NULL.\n");
-                    return 2;
+            // Receive first char of word.
+            char letter = getchar();
+            
+            // Put received char into word and take another. Repeat until user presses Enter.
+            for (unsigned int i = 0; letter != '\n'; i++) {
+
+                // Double the size of the word array if the amomunt of characters goes over the current size.
+                if (i > wordSize) {
+                    word = realloc(word, sizeof(char) * (wordSize * 2));
+                    if (word == NULL) {
+                        printf("Error: realloc() returned NULL.\n");
+                        return 2;
+                    }
+                    wordSize *= 2;
                 }
-                wordSize *= 2;
+
+                word[i] = toupper(letter);
+                wordLength++;
+                letter = getchar();
             }
 
-            word[i] = toupper(letter);
-            wordLength++;
-            letter = getchar();
+            // If user pressed Enter without typing anything, restart the loop.
+            if (word[0] == '\0') {
+                continue;
+            }
+
+            // If user entered "." as the word, break out of the loop to stop receiving words.
+            if (word[0] == '.') {
+                break;
+            }
         }
 
-        // If user pressed Enter without typing anything, restart the loop.
-        if (word[0] == '\0') {
-            continue;
-        }
-
-        // If user entered "." as the word, break out of the loop to stop receiving words.
-        if (word[0] == '.') {
-            break;
+        // Else, the board needs to expand for word to fit.
+        else {
+            length++;
+            height++;
         }
 
         // Make an array with an element for each possible direction, with each element initialized to 0.
@@ -189,9 +210,11 @@ int main(void) {
             functions[index % 8] = i;
         }
 
-        // Create variables for storing direction function pointer and whether the call to it failed.
+        // Create variable for storing direction function pointer.
         bool (*function)(ListNode** letters, char* word, unsigned int wordLength, unsigned int length, unsigned int height);
-        bool failed = true;
+
+        // Start failed at true so that the loop is taken.
+        failed = true;
 
         // Go through functions array, calling the function at element until word is placed or all directions tried.
         for (int i = 0; failed && i < 8; i++) {
@@ -230,10 +253,11 @@ int main(void) {
         }
 
         // If failed is still true after all directions were checked, word was not placed.
-        if (failed) {
+        if (failed && answer == 'N') {
             printf("Word could not be placed on the grid.\n");
         }
 
+        if (!failed || answer == 'N')
         word[0] = '\0';
     }
     
